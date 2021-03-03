@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import {signup} from '../api/apiCalls';
     //iki türlü component var. function ve class component. 
     //class component mutlaka bir render method u return etmek zorunda.
     //class component stateful, functional component ise stateless deniyor. 
@@ -11,7 +12,8 @@ class UserSignupPage extends React.Component{
       username: null,
       displayName:null,
       password:null,
-      passwordRepeat:null
+      passwordRepeat:null,
+      pendingApiCall : false
 
   }  
 //      //state update' i yapılacağı zaman setState fonksiyonu ile gerçekleştir.
@@ -24,7 +26,7 @@ class UserSignupPage extends React.Component{
           [name]:value
       })
   }
-  onClickSignup = event =>{
+  onClickSignup = async event =>{
       //browser bizim yerimize form un içeriğini alıp göndermeye çalışıyor. Bu eventi engellemek için
       event.preventDefault();
       const {username,displayName,password} =this.state;
@@ -34,34 +36,57 @@ class UserSignupPage extends React.Component{
           displayName,
           password:password
       }
-      axios.post('/api/1.0/users',body)
+      this.setState({
+          pendingApiCall:true
+      });
+      //kodun burada beklemesini ve cevabı response a atıp devam edebilmemizi sağlıyor.
+      try{
+        const response = await signup(body);
+      }catch(error){
 
+      }
+      this.setState({pendingApiCall:false})
+      //async çalıştığı için akış bitmeden tüm case leri düşünmemiz gerektiği için async in tamamlandığından emin olmak için böyle yaptık.
+    // signup(body)
+    //   .then((response) => {
+    //         this.setState({pendingApiCall:false})
+    //   })
+    //   .catch(error =>{
+    //       this.setState({pendingApiCall:false});
+    //   });
   }
     
     render(){
+        const {pendingApiCall} = this.state;
         return(
-            <form>
-            <h1>Sign UP</h1>
-            <div>
+            <div className="container">
+ <form>
+            <h1 className="text-center">Sign UP</h1>
+            <div className="mb-3">
             <label>Username</label>
-            <input name="username" onChange={this.onChange}/>
+            <input name="username" className="form-control" onChange={this.onChange}/>
             </div>
-            <div>
+            <div className="mb-3">
             <label>Display Name</label>
-            <input name="displayName" onChange={this.onChange}/>
+            <input name="displayName" className="form-control" onChange={this.onChange}/>
             </div>
         <div>
             <label>Password</label>
-            <input name="password" type="password" onChange={this.onChange}/>
+            <input name="password" type="password" className="form-control" onChange={this.onChange}/>
+        </div>
+        <div className="mb-3">
+            <label>Password Repeat</label>
+            <input name="passwordRepeat" type="password"  className="form-control" onChange={this.onChange}/>
         </div>
         <div>
-            <label>Password Repeat</label>
-            <input name="passwordRepeat" type="password" onChange={this.onChange}/>
-        </div>
-        <button onClick={this.onClickSignup}>
+        <button className="btn btn-primary" onClick={this.onClickSignup} disabled={pendingApiCall}>
+        {pendingApiCall && <span className="spinner-border spinner-border-sm"></span>}
             Sign Up
         </button>
+        </div>
             </form>
+            </div>
+           
         );
     }
 
